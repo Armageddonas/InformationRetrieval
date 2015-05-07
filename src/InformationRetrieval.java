@@ -52,19 +52,21 @@ public class InformationRetrieval {
         String queries5wordspath = "queries5words.txt";
 
         //Test database value set to 0
-        ArrayList<Query> queries5words = LoadQueries(queries5wordspath,0);
-        ArrayList<Query> queriesallwords = LoadQueries(queriesallwordspath,0);
+        ArrayList<Query> queries5words = LoadQueries(queries5wordspath, 0);
+        ArrayList<Query> queriesallwords = LoadQueries(queriesallwordspath, 0);
 
         System.out.println(queries5words);
         //System.out.println("\n"+queries5words.get);
-        //for (int i = 0; i < queries5words.size(); i++) {
-        for (int i = 2; i <= 2; i++) {
+        for (int i = 0; i < queries5words.size(); i++) {
+            //for (int i = 2; i <= 2; i++) {
             queries5words.get(i).RunQuery();
             RetrievalModels temp = new RetrievalModels();
             temp.myQuery = queries5words.get(i);
             temp.RunBooleanModel();
-            temp.RunTF_IDF();
             System.out.println("Query: " + queries5words.get(i).id + ", Boolean model retrieved: \n" + temp.BooleanList);
+            temp.RunTF();
+            System.out.println("Query: " + queries5words.get(i).id + ", TF-IDF model retrieved: \n" + temp.TF_List);
+            temp.RunTF_IDF();
             System.out.println("Query: " + queries5words.get(i).id + ", TF-IDF model retrieved: \n" + temp.TF_IDF_List);
         }
 

@@ -123,15 +123,17 @@ public class Query {
 
             for (int j = 0; j < allWords.get(i).CollectionIds.size(); j++) {
                 CollectionDoc temp = allWords.get(i).CollectionIds.get(j);
+                allWords.get(i).CollectionIds.get(j).tf
+                        = ((double) temp.frequency / (temp.frequency + 0.5 + 1.5 + (temp.doclenght / docAveLength)));
                 allWords.get(i).CollectionIds.get(j).tf_idf
-                        = ((double) temp.tf / (temp.tf + 0.5 + 1.5 + (temp.doclenght / docAveLength)) * wordIDF);
+                        = temp.tf * wordIDF;
             }
         }
     }
 
     /*private void FindTF() {
      for (int i = 0; i < allWords.size(); i++) {
-     allWords.get(i).tf = (double) allWords.get(i).wordFrequency / maxFrequency;
+     allWords.get(i).frequency = (double) allWords.get(i).wordFrequency / maxFrequency;
      }
 
      }*/

@@ -11,14 +11,14 @@ public class CollectionDoc {
 
     int id;
     int doclenght;
-    int tf;
-    //double idf;
+    int frequency;
+    double tf;
     double tf_idf;
 
-    public CollectionDoc(int id, int doclenght, int tf) {
+    public CollectionDoc(int id, int doclenght, int f) {
         this.id = id;
         this.doclenght = doclenght;
-        this.tf = tf;
+        this.frequency = f;
     }
 
     public boolean CompareId(CollectionDoc myDoc) {

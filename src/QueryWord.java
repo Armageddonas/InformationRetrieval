@@ -14,7 +14,7 @@ public class QueryWord {
     //<editor-fold defaultstate="collapsed" desc="Query">
     String theWord;
     //int wordFrequency;
-    //double tf;
+    //double frequency;
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Collection">
