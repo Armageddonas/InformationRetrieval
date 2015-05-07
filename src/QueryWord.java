@@ -13,19 +13,27 @@ public class QueryWord {
 
     //<editor-fold defaultstate="collapsed" desc="Query">
     String theWord;
-    int wordFrequency;
-    double tf;
+    //int wordFrequency;
+    //double tf;
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Collection">
-    double collTF;
-    double collFrequency;
     int df;
     int ctf;
     double idf;
     boolean exists;//Remove
     ArrayList<CollectionDoc> CollectionIds = new ArrayList();
     //</editor-fold>
+
+    public boolean containsID(int id) {
+
+        for (int i = 0; i < CollectionIds.size(); i++) {
+            if (CollectionIds.get(i).id == id) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public QueryWord(String theWord) {
         this.theWord = theWord;
@@ -41,7 +49,7 @@ public class QueryWord {
 
     @Override
     public String toString() {
-        return "QueryWord{" + "theWord=" + theWord + ", wordFrequency=" + wordFrequency + ", tf=" + tf + ", df=" + df + ", ctf=" + ctf + ", idf=" + idf + ", exists=" + exists + ", CollectionIds=" + CollectionIds + '}';
+        return "QueryWord{" + "theWord=" + theWord + ", CollectionIds=" + CollectionIds + '}';
     }
 
     public void LoadServerData(QueryWord ServerData) {

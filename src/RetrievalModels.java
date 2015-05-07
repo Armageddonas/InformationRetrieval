@@ -7,7 +7,7 @@ public class RetrievalModels {
 
     Query myQuery;
     ArrayList<Integer> BooleanList;
-    ArrayList<Document> TF_IDF_List;
+    ArrayList<CollectionDoc> TF_IDF_List;
     Evaluation booleanEval;
     Evaluation TFEval;
     Evaluation TF_IDFEval;
@@ -36,7 +36,7 @@ public class RetrievalModels {
 
             //Check if every word has the id in the list
             for (int i = 0; i < allWords.size(); i++) {
-                if (!allWords.get(i).CollectionIds.contains(allIds.get(j))) {
+                if (!allWords.get(i).containsID(allIds.get(j))) {
                     inAllDocuments = false;
                 }
             }
@@ -52,27 +52,27 @@ public class RetrievalModels {
 
     public void RunTF_IDF() {
         ArrayList<QueryWord> allWords = myQuery.allWords;
-        ArrayList<CollectionDoc> allIds = new ArrayList();
+        ArrayList<CollectionDoc> allRetrievedDocs = new ArrayList();
 
         //<editor-fold defaultstate="collapsed" desc="Create list with all the ids">
         for (int i = 0; i < allWords.size(); i++) {
             for (int j = 0; j < allWords.get(i).CollectionIds.size(); j++) {
                 CollectionDoc temp = allWords.get(i).CollectionIds.get(j);
 
-                allIds.add(temp);
+                allRetrievedDocs.add(temp);
             }
         }
         //</editor-fold>
 
         //<editor-fold defaultstate="collapsed" desc="Calculate idf for every word and sum them">
-        for (int i = 0; i < allIds.size(); i++) {
+        for (int i = 0; i < allRetrievedDocs.size(); i++) {
             int counter = 0;
-            for (int j = 0; j < allIds.size(); j++) {
-                if (allIds.get(i).CompareId(allIds.get(j)) == true) {
+            for (int j = 0; j < allRetrievedDocs.size(); j++) {
+                if (allRetrievedDocs.get(i).CompareId(allRetrievedDocs.get(j)) == true) {
                     counter++;
-                    allIds.get(i).tf_idf += allIds.get(j).idf * allIds.get(j).tf;
                     if (counter > 1) {
-                        allIds.remove(j);
+                        allRetrievedDocs.get(i).tf_idf += allRetrievedDocs.get(j).tf_idf;
+                        allRetrievedDocs.remove(j);
                     }
                 }
             }
@@ -80,9 +80,9 @@ public class RetrievalModels {
         //</editor-fold>
 
         //<editor-fold defaultstate="collapsed" desc="Sorting">        
-        Collections.sort(allIds, new Comparator<Document>() {
+        Collections.sort(allRetrievedDocs, new Comparator<CollectionDoc>() {
             @Override
-            public int compare(Document doc1, Document doc2) {
+            public int compare(CollectionDoc doc1, CollectionDoc doc2) {
                 int returnVal = 0;
 
                 if (doc1.tf_idf > doc2.tf_idf) {
@@ -99,11 +99,11 @@ public class RetrievalModels {
         //</editor-fold>
 
         //<editor-fold defaultstate="collapsed" desc="Keep first 100">
-        while (allIds.size() > 100) {
-            allIds.remove(allIds.size() - 1);
+        while (allRetrievedDocs.size() > 100) {
+            allRetrievedDocs.remove(allRetrievedDocs.size() - 1);
         }
         //</editor-fold>
-        TF_IDF_List = allIds;
+        TF_IDF_List = allRetrievedDocs;
     }
 
     public void EvaluateList(ArrayList<Integer> retrievedList, ArrayList<Integer> evaluationList) {

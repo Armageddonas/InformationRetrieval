@@ -17,7 +17,7 @@ import java.util.logging.Logger;
  */
 public class InformationRetrieval {
 
-    public static ArrayList LoadQueries(String filepath) {
+    public static ArrayList LoadQueries(String filepath, int database) {
         ArrayList<Query> Queries = new ArrayList();
         try {
 
@@ -29,7 +29,7 @@ public class InformationRetrieval {
                 String description = line.split("#")[1];
 
                 Query temp;
-                temp = new Query(description, id);
+                temp = new Query(description, id, database);
 
                 Queries.add(temp);
             }
@@ -51,8 +51,9 @@ public class InformationRetrieval {
         String queriesallwordspath = "queriesallwords.txt";
         String queries5wordspath = "queries5words.txt";
 
-        ArrayList<Query> queries5words = LoadQueries(queries5wordspath);
-        ArrayList<Query> queriesallwords = LoadQueries(queriesallwordspath);
+        //Test database value set to 0
+        ArrayList<Query> queries5words = LoadQueries(queries5wordspath,0);
+        ArrayList<Query> queriesallwords = LoadQueries(queriesallwordspath,0);
 
         System.out.println(queries5words);
         //System.out.println("\n"+queries5words.get);
@@ -68,10 +69,10 @@ public class InformationRetrieval {
         }
 
         /*queries5words.get(4).RunQuery();
-        RetrievalModels temp = new RetrievalModels();
-        temp.myQuery = queries5words.get(4);
-        temp.RunBooleanModel();
-        System.out.println("Retrieved: \n" + temp.BooleanList);*/
+         RetrievalModels temp = new RetrievalModels();
+         temp.myQuery = queries5words.get(4);
+         temp.RunBooleanModel();
+         System.out.println("Retrieved: \n" + temp.BooleanList);*/
     }
 
 }

@@ -12,8 +12,8 @@ public class CollectionDoc {
     int id;
     int doclenght;
     int tf;
-    double idf;
-    double tf_idf = 0;
+    //double idf;
+    double tf_idf;
 
     public CollectionDoc(int id, int doclenght, int tf) {
         this.id = id;
@@ -27,4 +27,11 @@ public class CollectionDoc {
         }
         return false;
     }
+
+    @Override
+    public String toString() {
+        return "CollectionDoc{" + "id=" + id + ", tf_idf=" + tf_idf + '}'+"\n";
+    }
+
+    
 }

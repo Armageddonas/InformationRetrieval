@@ -1,4 +1,5 @@
 import java.io.IOException;
+import static java.lang.System.exit;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,7 +23,9 @@ public class Query {
     String Description;
     ArrayList<QueryWord> allWords;
     double maxFrequency;
+    int database;
     int CollectionSize = 84678;
+    int docAveLength;
     int Database;
 
     //Split every word of the query so you can set attributes
@@ -41,19 +44,40 @@ public class Query {
     }
 
     public void RunQuery() {
-        FindFrequency();
-        FindMaxFrequency();
-        FindTF();
+        //FindFrequency();
+        //FindMaxFrequency();
+        //FindTF();
+        DatabaseValues();
 
         //TODO: Crawler finds df, exists, Collection IDs
         for (int i = 0; i < allWords.size(); i++) {
-            allWords.get(i).LoadServerData(Crawler(allWords.get(i).theWord));
+            allWords.get(i).LoadServerData(CrawlDocValues(allWords.get(i).theWord));
         }
 
         FindIDF();
     }
 
-    private QueryWord Crawler(String Word) {
+    private void DatabaseValues() {
+        switch (database) {
+            case 0:
+                docAveLength = 493;
+                break;
+            case 1:
+                docAveLength = 493;
+                break;
+            case 2:
+                docAveLength = 288;
+                break;
+            case 3:
+                docAveLength = 288;
+                break;
+            default:
+                System.out.println("Error: wrong database number");
+                exit(1);
+        }
+    }
+
+    private QueryWord CrawlDocValues(String Word) {
 
         try {
             QueryWord temp = new QueryWord(Word);
@@ -80,7 +104,7 @@ public class Query {
                 int id = Integer.parseInt(data[i]);
                 int doclenght = Integer.parseInt(data[i + 1]);
                 int tf = Integer.parseInt(data[i + 2]);
-                
+
                 temp.CollectionIds.add(new CollectionDoc(id, doclenght, tf));
             }
             return temp;
@@ -91,52 +115,59 @@ public class Query {
     }
 
     private void FindIDF() {
-        /*Old part
-         for (int i = 0; i < allWords.size(); i++) {
-         allWords.get(i).idf = Math.log((double) CollectionSize / allWords.get(i).df);
-         }*/
-    }
-
-    private void FindTF() {
-        /* Old part
-         for (int i = 0; i < allWords.size(); i++) {
-         allWords.get(i).tf = (double) allWords.get(i).wordFrequency / maxFrequency;
-         }*/
-
-    }
-
-    private void FindFrequency() {
-
         for (int i = 0; i < allWords.size(); i++) {
-            int counter = 0;
-            //Compare with all the words of the query
-            for (int j = 0; j < allWords.size(); j++) {
-                if (allWords.get(i).Compare(allWords.get(j)) == true) {
-                    counter++;
-                    allWords.get(i).wordFrequency = counter;
-                    //Remove word if it is encountered more than one time
-                    if (counter > 1) {
-                        allWords.remove(j);
-                    }
-                }
+            //<editor-fold defaultstate="collapsed" desc="Find idf for every word">      
+            double wordIDF = Math.log((double) CollectionSize / allWords.get(i).df);
+            allWords.get(i).idf = wordIDF;
+            //</editor-fold>
+
+            for (int j = 0; j < allWords.get(i).CollectionIds.size(); j++) {
+                CollectionDoc temp = allWords.get(i).CollectionIds.get(j);
+                allWords.get(i).CollectionIds.get(j).tf_idf
+                        = ((double) temp.tf / (temp.tf + 0.5 + 1.5 + (temp.doclenght / docAveLength)) * wordIDF);
             }
         }
     }
 
-    //Finds the term with the biggest frequency
-    private void FindMaxFrequency() {
-        double max = 0;
-        for (int i = 0; i < allWords.size(); i++) {
-            if (allWords.get(i).wordFrequency > max) {
-                max = allWords.get(i).wordFrequency;
-            }
-        }
-        maxFrequency = max;
-    }
+    /*private void FindTF() {
+     for (int i = 0; i < allWords.size(); i++) {
+     allWords.get(i).tf = (double) allWords.get(i).wordFrequency / maxFrequency;
+     }
 
-    public Query(String Description, int id) {
+     }*/
+    /*
+     private void FindFrequency() {
+    
+     for (int i = 0; i < allWords.size(); i++) {
+     int counter = 0;
+     //Compare with all the words of the query
+     for (int j = 0; j < allWords.size(); j++) {
+     if (allWords.get(i).Compare(allWords.get(j)) == true) {
+     counter++;
+     allWords.get(i).wordFrequency = counter;
+     //Remove word if it is encountered more than one time
+     if (counter > 1) {
+     allWords.remove(j);
+     }
+     }
+     }
+     }
+     }*/
+
+    /*//Finds the term with the biggest frequency
+     private void FindMaxFrequency() {
+     double max = 0;
+     for (int i = 0; i < allWords.size(); i++) {
+     if (allWords.get(i).wordFrequency > max) {
+     max = allWords.get(i).wordFrequency;
+     }
+     }
+     maxFrequency = max;
+     }*/
+    public Query(String Description, int id, int database) {
         this.Description = SanitizeText(Description);
         this.id = id;
+        this.database = database;
         InitializeAllWords();
     }
 
