@@ -14,6 +14,7 @@ public class CollectionDoc {
     int frequency;
     double tf;
     double tf_idf;
+    double b25;
 
     public CollectionDoc(int id, int doclenght, int f) {
         this.id = id;

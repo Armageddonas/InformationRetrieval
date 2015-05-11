@@ -106,8 +106,8 @@ public class RetrievalModels {
         //</editor-fold>
         TF_IDF_List = allRetrievedDocs;
     }
-    
-    public void RunTF(){
+
+    public void RunTF() {
         ArrayList<QueryWord> allWords = myQuery.allWords;
         ArrayList<CollectionDoc> allRetrievedDocs = new ArrayList();
 
@@ -121,14 +121,14 @@ public class RetrievalModels {
         }
         //</editor-fold>
 
-        //<editor-fold defaultstate="collapsed" desc="Calculate frequency for every word and sum them">
+        //<editor-fold defaultstate="collapsed" desc="Sum tf">
         for (int i = 0; i < allRetrievedDocs.size(); i++) {
             int counter = 0;
             for (int j = 0; j < allRetrievedDocs.size(); j++) {
                 if (allRetrievedDocs.get(i).CompareId(allRetrievedDocs.get(j)) == true) {
                     counter++;
                     if (counter > 1) {
-                        allRetrievedDocs.get(i).frequency += allRetrievedDocs.get(j).frequency;
+                        allRetrievedDocs.get(i).tf += allRetrievedDocs.get(j).tf;
                         allRetrievedDocs.remove(j);
                     }
                 }
@@ -145,6 +145,62 @@ public class RetrievalModels {
                 if (doc1.tf_idf > doc2.tf_idf) {
                     returnVal = -1;
                 } else if (doc1.tf_idf < doc2.tf_idf) {
+                    returnVal = 1;
+                } else {
+                    returnVal = 0;
+                }
+
+                return returnVal;
+            }
+        });
+        //</editor-fold>
+
+        //<editor-fold defaultstate="collapsed" desc="Keep first 100">
+        while (allRetrievedDocs.size() > 100) {
+            allRetrievedDocs.remove(allRetrievedDocs.size() - 1);
+        }
+        //</editor-fold>
+        TF_List = allRetrievedDocs;
+    }
+
+    public void RunB25() {
+        ArrayList<QueryWord> allWords = myQuery.allWords;
+        ArrayList<CollectionDoc> allRetrievedDocs = new ArrayList();
+
+        //<editor-fold defaultstate="collapsed" desc="Create list with all the ids">
+        for (int i = 0; i < allWords.size(); i++) {
+            for (int j = 0; j < allWords.get(i).CollectionIds.size(); j++) {
+                CollectionDoc temp = allWords.get(i).CollectionIds.get(j);
+
+                allRetrievedDocs.add(temp);
+            }
+        }
+        //</editor-fold>
+
+        //<editor-fold defaultstate="collapsed" desc="Calculate b25 for every word and sum them">
+        for (int i = 0; i < allRetrievedDocs.size(); i++) {
+            int counter = 0;
+            for (int j = 0; j < allRetrievedDocs.size(); j++) {
+                if (allRetrievedDocs.get(i).CompareId(allRetrievedDocs.get(j)) == true) {
+                    counter++;
+                    if (counter > 1) {
+                    allRetrievedDocs.get(i).b25 += allRetrievedDocs.get(j).b25;
+                        allRetrievedDocs.remove(j);
+                    }
+                }
+            }
+        }
+        //</editor-fold>
+
+        //<editor-fold defaultstate="collapsed" desc="Sorting">        
+        Collections.sort(allRetrievedDocs, new Comparator<CollectionDoc>() {
+            @Override
+            public int compare(CollectionDoc doc1, CollectionDoc doc2) {
+                int returnVal = 0;
+
+                if (doc1.b25 > doc2.b25) {
+                    returnVal = -1;
+                } else if (doc1.b25 < doc2.b25) {
                     returnVal = 1;
                 } else {
                     returnVal = 0;
