@@ -7,7 +7,7 @@ public class Evaluation {
 
     double recall;
     double precision;
-    double standard11;
+    Point[] standard11;
     double r_precision;
     int QueryId;
 
@@ -30,6 +30,31 @@ public class Evaluation {
 
     public void CalcPrecision() {
         precision = (double) relevantDocsRetrieved / retrievedDocsTotal;
+    }
+
+    public void Calc11Points() {
+        ArrayList<Point> AllPoints = new ArrayList();
+        standard11 = new Point[11];
+
+        for (int i = 0; i < retrievedList.size(); i++) {
+            Point temp = new Point();
+            temp.x = CalcRecall(i);
+            temp.y = CalcPrecision(i);
+            AllPoints.add(temp);
+        }
+
+        //<editor-fold defaultstate="collapsed" desc="Simplify curve">
+        for (int i = 0; i < 10; i++) {
+            standard11[i] = new Point(i * 0.1, 0);
+        }
+
+        for (int i = 0; i < AllPoints.size(); i++) {
+            if (standard11[(int) i * 10].y < AllPoints.get(i).y) {
+                standard11[(int) i * 10].y = AllPoints.get(i).y;
+            }
+        }
+        //</editor-fold>
+
     }
 
     public void CalcRPrecision() {
@@ -80,4 +105,15 @@ public class Evaluation {
         //TODO 11points
     }
 
+    class Point {
+
+        double x;
+        double y;
+
+        public Point(double x, double y) {
+            this.x = x;
+            this.y = y;
+        }
+
+    }
 }
