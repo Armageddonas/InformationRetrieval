@@ -54,7 +54,7 @@ public class Query {
             allWords.get(i).LoadServerData(CrawlDocValues(allWords.get(i).theWord));
         }
 
-        FindIDF();
+        InitializeModelsValues();
     }
 
     private void DatabaseValues() {
@@ -114,8 +114,9 @@ public class Query {
         return null;
     }
 
-    private void FindIDF() {
+    private void InitializeModelsValues() {
         for (int i = 0; i < allWords.size(); i++) {
+            QueryWord curWord = allWords.get(i);
             //<editor-fold defaultstate="collapsed" desc="Find idf for every word">      
             double wordIDF = Math.log((double) CollectionSize / allWords.get(i).df);
             allWords.get(i).idf = wordIDF;
@@ -123,10 +124,23 @@ public class Query {
 
             for (int j = 0; j < allWords.get(i).CollectionIds.size(); j++) {
                 CollectionDoc temp = allWords.get(i).CollectionIds.get(j);
+                //<editor-fold defaultstate="collapsed" desc="tf">
                 allWords.get(i).CollectionIds.get(j).tf
                         = ((double) temp.frequency / (temp.frequency + 0.5 + 1.5 + (temp.doclenght / docAveLength)));
+                //</editor-fold>
+                //<editor-fold defaultstate="collapsed" desc="tf idf">
                 allWords.get(i).CollectionIds.get(j).tf_idf
                         = temp.tf * wordIDF;
+                //</editor-fold>
+
+                //<editor-fold defaultstate="collapsed" desc="Okapi">
+                double term1 = (((0 + 1 / 2) / (0 - 0 + 1 / 2))
+                        / ((curWord.df - 0 + 1 / 2) / (CollectionSize - wordIDF - 0 + 0 + 1 / 2)));
+                double term2 = ((1.2 + 1) * temp.tf)
+                        / (1.2 * ((1 - 0.75) + 0.75 + (temp.doclenght / docAveLength)) + temp.tf);
+                double term3 = ((100 + 1) * temp.tf) / (100 + temp.tf);
+                allWords.get(i).CollectionIds.get(j).b25 += Math.log(term1 * term2 * term3);
+                //</editor-fold>
             }
         }
     }
