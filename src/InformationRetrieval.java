@@ -24,7 +24,7 @@ public class InformationRetrieval {
             BufferedReader in = new BufferedReader(new FileReader(filepath));
             String line;
             while ((line = in.readLine()) != null) {
-                //Save query id and query description
+                //Save query QueryID and query description
                 int id = Integer.parseInt(line.split("#")[0]);
                 String description = line.split("#")[1];
 
@@ -57,17 +57,24 @@ public class InformationRetrieval {
 
         System.out.println(queries5words);
         //System.out.println("\n"+queries5words.get);
-        for (int i = 0; i < queries5words.size(); i++) {
-            //for (int i = 2; i <= 2; i++) {
+        //for (int i = 0; i < queries5words.size(); i++) {
+        for (int i = 2; i <= 2; i++) {
             queries5words.get(i).RunQuery();
             RetrievalModels temp = new RetrievalModels();
             temp.myQuery = queries5words.get(i);
-            temp.RunBooleanModel();
-            System.out.println("Query: " + queries5words.get(i).id + ", Boolean model retrieved: \n" + temp.BooleanList);
-            temp.RunTF();
-            System.out.println("Query: " + queries5words.get(i).id + ", TF-IDF model retrieved: \n" + temp.TF_List);
+            /*temp.RunBooleanModel();
+             System.out.println("Query: " + queries5words.get(i).QueryID + ", Boolean model retrieved: \n" + temp.BooleanList);
+             temp.RunTF();
+             System.out.println("Query: " + queries5words.get(i).QueryID + ", TF model retrieved: \n" + temp.TF_List);
+             */
             temp.RunTF_IDF();
-            System.out.println("Query: " + queries5words.get(i).id + ", TF-IDF model retrieved: \n" + temp.TF_IDF_List);
+            /*System.out.println("Query: " + queries5words.get(i).QueryID + ", TF-IDF model retrieved: \n" + temp.TF_IDF_List);
+             temp.RunB25();
+             System.out.println("Query: " + queries5words.get(i).QueryID + ", Okapi model retrieved: \n" + temp.B25_List);
+             */
+            temp.TF_IDFEval();
+            System.out.println("Query: " + queries5words.get(i).QueryID + ", Eval tfidf: \n" + temp.TF_IDFEval.toString());
+
         }
 
         /*queries5words.get(4).RunQuery();

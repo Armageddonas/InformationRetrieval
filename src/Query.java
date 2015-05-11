@@ -19,7 +19,7 @@ import org.jsoup.select.Elements;
  */
 public class Query {
 
-    int id;
+    int QueryID;
     String Description;
     ArrayList<QueryWord> allWords;
     double maxFrequency;
@@ -134,7 +134,7 @@ public class Query {
                 //</editor-fold>
 
                 //<editor-fold defaultstate="collapsed" desc="Okapi">
-                double term1 = (((0 + 1 / 2) / (0 - 0 + 1 / 2))
+                double term1 = (((0 + 0.5) / (0 - 0 + 0.5))
                         / ((curWord.df - 0 + 1 / 2) / (CollectionSize - wordIDF - 0 + 0 + 1 / 2)));
                 double term2 = ((1.2 + 1) * temp.tf)
                         / (1.2 * ((1 - 0.75) + 0.75 + (temp.doclenght / docAveLength)) + temp.tf);
@@ -182,14 +182,14 @@ public class Query {
      }*/
     public Query(String Description, int id, int database) {
         this.Description = SanitizeText(Description);
-        this.id = id;
+        this.QueryID = id;
         this.database = database;
         InitializeAllWords();
     }
 
     @Override
     public String toString() {
-        return "Query{" + "id=" + id + ", Description=" + Description + '}' + "\n";
+        return "Query{" + "id=" + QueryID + ", Description=" + Description + '}' + "\n";
     }
 
     private static String SanitizeText(String Text) {

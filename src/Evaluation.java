@@ -16,25 +16,47 @@ public class Evaluation {
     //Number of relevant docs retrieved
     int relevantDocsRetrieved;
 
-    //Number of relevant documents retrieved
-    int relevantRetrievedDocs;
     //Number of all relevant documents
     int relevantDocsTotal;
 
     ArrayList<Integer> retrievedList;
     ArrayList<Integer> evaluationList;
 
-    public void CalcRecall() {
-        recall = (double) relevantRetrievedDocs / relevantDocsTotal;
+    public double CalcRecall() {
+        return (double) relevantDocsRetrieved / relevantDocsTotal;
     }
 
-    public void CalcPrecision() {
-        precision = (double) relevantDocsRetrieved / retrievedDocsTotal;
+    public double CalcRecall(int listNumber) {
+        int relevantDocsRetrieved = 0;
+
+        for (int i = 0; i < listNumber; i++) {
+            if (evaluationList.contains(retrievedList.get(i))) {
+                relevantDocsRetrieved++;
+            }
+        }
+
+        return (double) relevantDocsRetrieved / relevantDocsTotal;
     }
 
-    public void Calc11Points() {
+    public double CalcPrecision() {
+        return (double) relevantDocsRetrieved / retrievedDocsTotal;
+    }
+
+    public double CalcPrecision(int listNumber) {
+        int relevantDocsRetrieved = 0;
+
+        for (int i = 0; i < listNumber; i++) {
+            if (evaluationList.contains(retrievedList.get(i))) {
+                relevantDocsRetrieved++;
+            }
+        }
+
+        return (double) relevantDocsRetrieved / retrievedDocsTotal;
+    }
+
+    public Point[] Calc11Points() {
         ArrayList<Point> AllPoints = new ArrayList();
-        standard11 = new Point[11];
+        Point[] st11 = new Point[11];
 
         for (int i = 0; i < retrievedList.size(); i++) {
             Point temp = new Point();
@@ -44,27 +66,56 @@ public class Evaluation {
         }
 
         //<editor-fold defaultstate="collapsed" desc="Simplify curve">
-        for (int i = 0; i < 10; i++) {
-            standard11[i] = new Point(i * 0.1, 0);
+        for (int i = 0; i < 11; i++) {
+            st11[i] = new Point(i * 0.1, 0);
         }
 
         for (int i = 0; i < AllPoints.size(); i++) {
-            if (standard11[(int) i * 10].y < AllPoints.get(i).y) {
-                standard11[(int) i * 10].y = AllPoints.get(i).y;
+            int indexSt11 = (int) AllPoints.get(i).x * 10;
+            
+            if (st11[indexSt11].y <= AllPoints.get(i).y) {
+                st11[indexSt11].y = AllPoints.get(i).y;
             }
         }
         //</editor-fold>
-
+        return st11;
     }
 
-    public void CalcRPrecision() {
+    private ArrayList<Integer> LoadDocs(String filepath) {
+
+        ArrayList<Integer> relDocs = new ArrayList();
+        try {
+
+            BufferedReader in = new BufferedReader(new FileReader(filepath));
+            String line;
+            while ((line = in.readLine()) != null) {
+                //Save query id and query description
+                int queryID = Integer.parseInt(line.split(" ")[0]);
+                int docID = Integer.parseInt(line.split(" ")[1]);
+
+                if (queryID == this.QueryId) {
+                    relDocs.add(docID);
+                }
+            }
+            in.close();
+
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(InformationRetrieval.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(InformationRetrieval.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return relDocs;
+    }
+
+    public double CalcRPrecision() {
         int counter = 0;
         for (int i = 0; i < retrievedList.size(); i++) {
             if (evaluationList.contains(retrievedList.get(i))) {
                 counter++;
             }
         }
-        r_precision = counter / relevantDocsTotal;
+
+        return (double)counter / relevantDocsTotal;
     }
 
     public ArrayList LoadEvaluationList(String filepath) {
@@ -93,16 +144,53 @@ public class Evaluation {
         return list;
     }
 
-    public Evaluation(ArrayList<Integer> retrievedList) {
-        this.retrievedList = retrievedList;
+    public void InitializeVariables() {
+        retrievedDocsTotal = retrievedList.size();
+        relevantDocsTotal = evaluationList.size();
+
+        //<editor-fold defaultstate="collapsed" desc="relevantDocsRetrieved">
+        int counter = 0;
+
+        for (int id : retrievedList) {
+            if (evaluationList.contains(id)) {
+                counter++;
+            }
+        }
+
+        relevantDocsRetrieved = counter;
+        //</editor-fold>
+    }
+
+    public Evaluation(ArrayList<CollectionDoc> retrievedList, int qID) {
+        //<editor-fold defaultstate="collapsed" desc="Keep first 100">
+        while (retrievedList.size() > 100) {
+            retrievedList.remove(retrievedList.size() - 1);
+        }
+        //</editor-fold>
+        //<editor-fold defaultstate="collapsed" desc="Convert arraylist">
+        ArrayList<Integer> mylist = new ArrayList();
+        for (CollectionDoc temp : retrievedList) {
+            mylist.add(temp.id);
+        }
+        //</editor-fold>
+
+        this.retrievedList = mylist;
+        this.QueryId = qID;
         //todo
+        evaluationList = LoadDocs("relevance.txt");
+        InitializeVariables();
     }
 
     public void RunEvaluation() {
-        CalcPrecision();
-        CalcRPrecision();
-        CalcRecall();
-        //TODO 11points
+        precision = CalcPrecision();
+        r_precision = CalcRPrecision();
+        recall = CalcRecall();
+        standard11 = Calc11Points();
+    }
+
+    @Override
+    public String toString() {
+        return "Evaluation{" + "recall=" + recall + ", precision=" + precision + ", standard11=" + standard11 + ", r_precision=" + r_precision + ", QueryId=" + QueryId + '}';
     }
 
     class Point {
@@ -110,9 +198,17 @@ public class Evaluation {
         double x;
         double y;
 
+        public Point() {
+        }
+
         public Point(double x, double y) {
             this.x = x;
             this.y = y;
+        }
+
+        @Override
+        public String toString() {
+            return "Point{" + "x=" + x + ", y=" + y + '}';
         }
 
     }
