@@ -47,7 +47,6 @@ public class Query {
         //FindFrequency();
         //FindMaxFrequency();
         //FindTF();
-        DatabaseValues();
 
         //TODO: Crawler finds df, exists, Collection IDs
         for (int i = 0; i < allWords.size(); i++) {
@@ -57,7 +56,7 @@ public class Query {
         InitializeModelsValues();
     }
 
-    private void DatabaseValues() {
+    private void InitDatabaseValues() {
         switch (database) {
             case 0:
                 docAveLength = 493;
@@ -185,6 +184,7 @@ public class Query {
         this.QueryID = id;
         this.database = database;
         InitializeAllWords();
+        InitDatabaseValues();
     }
 
     @Override
