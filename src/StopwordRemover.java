@@ -5,6 +5,8 @@
  */
 import java.io.*;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.*;
 
 /**
@@ -12,43 +14,47 @@ import javax.swing.*;
  */
 public class StopwordRemover {
 
-    public static void main(String[] args) throws Exception {
-        BufferedReader tokenFile = new BufferedReader(new FileReader("token.txt"));
-        BufferedReader stopFile = new BufferedReader(new FileReader("inquery"));
-        ArrayList<String> stopWords = new ArrayList<String>();
-        String nonStopWord, tokenLine;
-        boolean isStopword = false;
+    public static String Run(String textLine) {
+        BufferedReader stopFile;
+        try {
+            stopFile = new BufferedReader(new FileReader("stopwords.txt"));
+            ArrayList<String> stopWords = new ArrayList();
 
-        PrintWriter writer = new PrintWriter("toStemmer.txt", "UTF-8");
+            boolean isStopword = false;
+            String sanitizedText = "";
 
-        String stopWord;
-        while ((stopWord = stopFile.readLine()) != null) {
-            stopWords.add(stopWord);
-        }
+            //<editor-fold defaultstate="collapsed" desc="Load stopwords">
+            String stopWord;
+            while ((stopWord = stopFile.readLine()) != null) {
+                stopWords.add(stopWord);
+            }
+            stopFile.close();
+            //</editor-fold>
 
-        while ((tokenLine = tokenFile.readLine()) != null) {
-            String[] tokenLineWords = tokenLine.split(" ");
+            String[] tokenLineWords = textLine.split(" ");
 
             for (int j = 0; j < tokenLineWords.length; j++) {
+                //<editor-fold defaultstate="collapsed" desc="Chech if word is stopword">
                 isStopword = false;
                 for (int i = 0; i < stopWords.size(); i++) {
-                    //System.out.println(stopWords.get(i) + "\t\t stopword " + nonStopWord);
                     if (stopWords.get(i).equals(tokenLineWords[j])) {
                         isStopword = true;
                     }
-                    /*if (i == (stopWordCount - 1)) {
-                     writer.println(nonStopWord);
-                     }*/
                 }
+                //</editor-fold>
+                //<editor-fold defaultstate="collapsed" desc="Keep word if not a stopword">
                 if (isStopword == false) {
-                    writer.print(tokenLineWords[j]+" ");
+                    sanitizedText += tokenLineWords[j] + " ";
                 }
+                //</editor-fold>
             }
-        }
 
-        writer.close();
-        tokenFile.close();
-        stopFile.close();
-        System.out.println("Next run: java Stemmer toStemmer.txt");
+            return sanitizedText;
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(StopwordRemover.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(StopwordRemover.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 }
