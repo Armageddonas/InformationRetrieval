@@ -72,7 +72,7 @@ public class Evaluation {
 
         for (int i = 0; i < AllPoints.size(); i++) {
             int indexSt11 = (int) AllPoints.get(i).x * 10;
-            
+
             if (st11[indexSt11].y <= AllPoints.get(i).y) {
                 st11[indexSt11].y = AllPoints.get(i).y;
             }
@@ -109,13 +109,13 @@ public class Evaluation {
 
     public double CalcRPrecision() {
         int counter = 0;
-        for (int i = 0; i < retrievedList.size(); i++) {
+        for (int i = 0; i < retrievedList.size() && i < evaluationList.size(); i++) {
             if (evaluationList.contains(retrievedList.get(i))) {
                 counter++;
             }
         }
 
-        return (double)counter / relevantDocsTotal;
+        return (double) counter / relevantDocsTotal;
     }
 
     public ArrayList LoadEvaluationList(String filepath) {
@@ -161,18 +161,28 @@ public class Evaluation {
         //</editor-fold>
     }
 
-    public Evaluation(ArrayList<CollectionDoc> retrievedList, int qID) {
+    public Evaluation(ArrayList retrievedList, int qID) {
+        if(retrievedList.size()==0)
+        {
+            System.out.println("Evaluation: Empty list");
+            return;
+        }
         //<editor-fold defaultstate="collapsed" desc="Keep first 100">
         while (retrievedList.size() > 100) {
             retrievedList.remove(retrievedList.size() - 1);
         }
         //</editor-fold>
         //<editor-fold defaultstate="collapsed" desc="Convert arraylist">
-        ArrayList<Integer> mylist = new ArrayList();
-        for (CollectionDoc temp : retrievedList) {
-            mylist.add(temp.id);
+        ArrayList<Integer> mylist;
+        if (retrievedList.get(0) instanceof CollectionDoc) {
+            mylist = new ArrayList();
+            for (Object temp : retrievedList) {
+                mylist.add(((CollectionDoc) temp).id);
+            }
+        } //</editor-fold>
+        else {
+            mylist = (ArrayList<Integer>) retrievedList;
         }
-        //</editor-fold>
 
         this.retrievedList = mylist;
         this.QueryId = qID;

@@ -1,12 +1,16 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static javafx.application.Platform.exit;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -19,6 +23,10 @@ import java.util.logging.Logger;
  */
 public class InformationRetrieval {
 
+    static String RESULTS_DIRECTORY = "results";
+    static String RETRIEVED_IDS_PATH = "results/RetrievedIds.csv";
+    static String EVAL_MODELS_PATH = "results/EvaluateModels.csv";
+    static String QUERY_DESC_PATH = "results/QueryDesc.csv";
     static String queries5SanitizedPath = "queries5Sanitized.txt";
     static String queriesAllSanitizedPath = "queries5Sanitized.txt";
 
@@ -65,6 +73,52 @@ public class InformationRetrieval {
      */
     public static void main(String[] args) {
 
+        //<editor-fold defaultstate="collapsed" desc="Create folder and remove files">
+        File theDir = new File(RESULTS_DIRECTORY);
+
+        // if the directory does not exist, create it
+        if (!theDir.exists()) {
+            System.out.println("creating directory: " + RESULTS_DIRECTORY);
+            boolean result = false;
+
+            try {
+                theDir.mkdir();
+                result = true;
+            } catch (SecurityException se) {
+                //handle it
+            }
+            if (result) {
+                System.out.println("DIR created");
+            }
+        }
+
+        String[] myFiles;
+        myFiles = theDir.list();
+        for (int i = 0; i < myFiles.length; i++) {
+            File myFile = new File(theDir, myFiles[i]);
+            myFile.delete();
+        }
+        //</editor-fold>
+        //<editor-fold defaultstate="collapsed" desc="Initialize files">       
+        try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(RETRIEVED_IDS_PATH, true)))) {
+            out.println("QueryID,Model,Relevant Doc,TF,TF_IDF,B25");
+        } catch (IOException ex) {
+            Logger.getLogger(RetrievalModels.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(QUERY_DESC_PATH, true)))) {
+            out.println("QueryID,database,Description");
+        } catch (IOException ex) {
+            Logger.getLogger(RetrievalModels.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(EVAL_MODELS_PATH, true)))) {
+            out.println("QueryID,Model,Recall,Precision,R-Precision");
+        } catch (IOException ex) {
+            Logger.getLogger(RetrievalModels.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+
         String queriesallwordspath = "queriesallwords.txt";
         String queries5wordspath = "queries5words.txt";
 
@@ -72,33 +126,37 @@ public class InformationRetrieval {
         ArrayList<Query> queries5wordsTest = LoadQueries(queries5wordspath, 0);
         ArrayList<Query> queriesallwordsTest = LoadQueries(queriesallwordspath, 0);
 
-        System.out.println(queriesallwordsTest + "\n");
-        //QueryToFile(queriesallwordsTest);
-        //System.out.println(new Stemmer().Run(new String[]{queries5SanitizedPath}) + "\n");
-        StemQueries(queriesallwordsTest);
-        System.out.println("stemmer \n" + queriesallwordsTest + "\n");
+        System.out.println(queries5wordsTest + "\n");
+
         //for (int i = 0; i < queries5words.size(); i++) {
-        for (int i = 2; i <= 2; i++) {
-            queries5wordsTest.get(i).RunQuery();
+        for (int i = 0; i <= 0; i++) {
             RetrievalModels temp = new RetrievalModels();
+            queries5wordsTest.get(i).InitQuery();
             temp.myQuery = queries5wordsTest.get(i);
+
+            System.out.println("Query: " + temp.myQuery.QueryID);//+ ", TF-IDF model retrieved: \n" + temp.TF_IDF_List);
+            //temp.RunBooleanModel();
+            temp.RunB25();
+            temp.EvalB25();
+
+            //temp.RunTF_IDF();
+            //temp.EvalTF_IDF();
+            //temp.EvalBoolean();
             /*temp.RunBooleanModel();
-             System.out.println("Query: " + queries5words.get(i).QueryID + ", Boolean model retrieved: \n" + temp.BooleanList);
+             System.out.println("Query: " + temp.myQuery.QueryID + ", Boolean model retrieved: \n" + temp.BooleanList);
              temp.RunTF();
-             System.out.println("Query: " + queries5words.get(i).QueryID + ", TF model retrieved: \n" + temp.TF_List);
-             */
-            temp.RunTF_IDF();
-            /*System.out.println("Query: " + queries5words.get(i).QueryID + ", TF-IDF model retrieved: \n" + temp.TF_IDF_List);
+             System.out.println("Query: " + temp.myQuery.QueryID + ", TF model retrieved: \n" + temp.TF_List);
+
+             temp.RunTF_IDF();
+             System.out.println("Query: " + temp.myQuery.QueryID + ", TF-IDF model retrieved: \n" + temp.TF_IDF_List);
              temp.RunB25();
-             System.out.println("Query: " + queries5words.get(i).QueryID + ", Okapi model retrieved: \n" + temp.B25_List);
-             */
-            temp.TF_IDFEval();
-            System.out.println("Query: " + queries5wordsTest.get(i).QueryID + ", Eval tfidf: \n" + temp.TF_IDFEval.toString());
+             System.out.println("Query: " + temp.myQuery.QueryID + ", Okapi model retrieved: \n" + temp.B25_List);
 
+             temp.EvalTF_IDF();
+             System.out.println("Query: " + temp.myQuery.QueryID + ", Eval tfidf: \n" + temp.evalTF_IDF.toString());*/
         }
+        System.exit(0);
 
-        
-        
         //<editor-fold defaultstate="collapsed" desc="Initialize queries">
         for (int i = 0; i < 4; i++) {
             ArrayList<Query> queries5words = LoadQueries(queries5wordspath, i);
@@ -128,19 +186,18 @@ public class InformationRetrieval {
             default:
                 System.out.println("Error: Wrong database number");
                 break;
-
         }
 
         for (int i = 0; i < queries.size(); i++) {
-            queries.get(i).RunQuery();
-            RetrievalModels temp = new RetrievalModels();
-            temp.myQuery = queries.get(i);
-            temp.RunBooleanModel();
-            temp.RunTF();
-            temp.RunTF_IDF();
-            temp.RunB25();
+            queries.get(i).InitQuery();
+            RetrievalModels applyModel = new RetrievalModels();
+            applyModel.myQuery = queries.get(i);
+            applyModel.RunBooleanModel();
+            applyModel.RunTF();
+            applyModel.RunTF_IDF();
+            applyModel.RunB25();
 
-            temp.TF_IDFEval();
+            applyModel.EvalTF_IDF();
             //Todo add more evaluation functions
         }
     }

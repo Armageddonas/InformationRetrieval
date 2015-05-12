@@ -1,4 +1,7 @@
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import static java.lang.System.exit;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -27,6 +30,7 @@ public class Query {
     int CollectionSize = 84678;
     int docAveLength;
     int Database;
+    static String QUERY_DESC_PATH = "results/QueryDesc.csv";
 
     //Split every word of the query so you can set attributes
     private void InitializeAllWords() {
@@ -43,7 +47,8 @@ public class Query {
 
     }
 
-    public void RunQuery() {
+    public void InitQuery() {
+        StoreProcessedQuery();
         //FindFrequency();
         //FindMaxFrequency();
         //FindTF();
@@ -82,17 +87,18 @@ public class Query {
             QueryWord temp = new QueryWord(Word);
 
             String url = "http://fiji4.ccs.neu.edu/~zerg/lemurcgi/lemur.cgi?g=p&d=" + Database + "&v=" + Word;
-            //Sample link: http://fiji4.ccs.neu.edu/~zerg/lemurcgi/lemur.cgi?d=0&v=verbose
-            Document doc = Jsoup.connect(url).get();
-
-            Elements webpageBody = doc.getElementsByTag("body");
+            //Sample link: http://fiji4.ccs.neu.edu/~zerg/lemurcgi/lemur.cgi?d=0&v=will
+            Document doc = Jsoup.connect(url).maxBodySize(2 * 2048000).get();
             doc.select("hr").remove();
             doc.select("center").remove();
 
             String[] data = doc.getElementsByTag("body")
                     .text().split(" ");
+
+            //<editor-fold defaultstate="collapsed" desc="Debugging">
             //System.out.println("The word: '" + Word + "'");
             //System.out.println(doc.getElementsByTag("body").text());
+            //</editor-fold>
 
             //Get ctf
             temp.ctf = Integer.parseInt(data[0]);
@@ -131,7 +137,6 @@ public class Query {
                 allWords.get(i).CollectionIds.get(j).tf_idf
                         = temp.tf * wordIDF;
                 //</editor-fold>
-
                 //<editor-fold defaultstate="collapsed" desc="Okapi">
                 double term1 = (((0 + 0.5) / (0 - 0 + 0.5))
                         / ((curWord.df - 0 + 1 / 2) / (CollectionSize - wordIDF - 0 + 0 + 1 / 2)));
@@ -197,5 +202,14 @@ public class Query {
 
         temp = temp.toLowerCase();
         return temp;
+    }
+
+    public void StoreProcessedQuery() {
+
+        try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(QUERY_DESC_PATH, true)))) {
+            out.println(QueryID + "," + Database + "," + Description);
+        } catch (IOException ex) {
+            Logger.getLogger(RetrievalModels.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }
