@@ -1,3 +1,4 @@
+
 import java.io.*;
 import java.util.*;
 import java.util.logging.Level;
@@ -162,40 +163,46 @@ public class Evaluation {
     }
 
     public Evaluation(ArrayList retrievedList, int qID) {
-        if(retrievedList.size()==0)
-        {
-            System.out.println("Evaluation: Empty list");
-            return;
-        }
-        //<editor-fold defaultstate="collapsed" desc="Keep first 100">
-        while (retrievedList.size() > 100) {
-            retrievedList.remove(retrievedList.size() - 1);
-        }
-        //</editor-fold>
-        //<editor-fold defaultstate="collapsed" desc="Convert arraylist">
         ArrayList<Integer> mylist;
-        if (retrievedList.get(0) instanceof CollectionDoc) {
-            mylist = new ArrayList();
-            for (Object temp : retrievedList) {
-                mylist.add(((CollectionDoc) temp).id);
+        if (retrievedList.size() == 0) {
+            System.out.println("Evaluation: Empty list");
+            mylist = new ArrayList<Integer>();
+        } else {
+            //<editor-fold defaultstate="collapsed" desc="Keep first 100">
+            while (retrievedList.size() > 100) {
+                retrievedList.remove(retrievedList.size() - 1);
             }
-        } //</editor-fold>
-        else {
-            mylist = (ArrayList<Integer>) retrievedList;
+        //</editor-fold>
+            //<editor-fold defaultstate="collapsed" desc="Convert arraylist">
+            if (retrievedList.get(0) instanceof CollectionDoc) {
+                mylist = new ArrayList();
+                for (Object temp : retrievedList) {
+                    mylist.add(((CollectionDoc) temp).id);
+                }
+            } //</editor-fold>
+            else {
+                mylist = (ArrayList<Integer>) retrievedList;
+            }
         }
 
         this.retrievedList = mylist;
         this.QueryId = qID;
         //todo
         evaluationList = LoadDocs("relevance.txt");
-        InitializeVariables();
     }
 
     public void RunEvaluation() {
+        InitializeVariables();
+        
         precision = CalcPrecision();
         r_precision = CalcRPrecision();
         recall = CalcRecall();
         standard11 = Calc11Points();
+
+        precision = (double) Math.round(precision * 1000) / 10;
+        r_precision = (double) Math.round(r_precision * 1000) / 10;
+        recall = (double) Math.round(recall * 1000) / 10;
+        //Todo standard11
     }
 
     @Override

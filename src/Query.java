@@ -1,7 +1,9 @@
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import static java.lang.System.exit;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -20,16 +22,16 @@ import org.jsoup.select.Elements;
  *
  * @author Konstantinos Chasiotis
  */
-public class Query {
+public class Query implements Serializable {
 
     int QueryID;
     String Description;
+    String type;
     ArrayList<QueryWord> allWords;
     double maxFrequency;
     int database;
     int CollectionSize = 84678;
     int docAveLength;
-    int Database;
     static String QUERY_DESC_PATH = "results/QueryDesc.csv";
 
     //Split every word of the query so you can set attributes
@@ -40,7 +42,8 @@ public class Query {
 
         for (int i = 0; i < temp.length; i++) {
             temp[i] = temp[i].trim();
-            if (!temp[i].equals("")) {
+            //Todo: change if query tf added allwords.contains
+            if (!temp[i].equals("") && !allWords.contains(temp[i])) {
                 allWords.add(new QueryWord(temp[i]));
             }
         }
@@ -49,13 +52,17 @@ public class Query {
 
     public void InitQuery() {
         StoreProcessedQuery();
-        //FindFrequency();
-        //FindMaxFrequency();
-        //FindTF();
+        FindFrequency();
+        FindMaxFrequency();
+        FindTF();
 
         //TODO: Crawler finds df, exists, Collection IDs
         for (int i = 0; i < allWords.size(); i++) {
-            allWords.get(i).LoadServerData(CrawlDocValues(allWords.get(i).theWord));
+            QueryWord temp = CrawlDocValues(allWords.get(i).theWord);
+            while (temp == null) {
+                temp = CrawlDocValues(allWords.get(i).theWord);
+            }
+            allWords.get(i).LoadServerData(temp);
         }
 
         InitializeModelsValues();
@@ -86,7 +93,7 @@ public class Query {
         try {
             QueryWord temp = new QueryWord(Word);
 
-            String url = "http://fiji4.ccs.neu.edu/~zerg/lemurcgi/lemur.cgi?g=p&d=" + Database + "&v=" + Word;
+            String url = "http://fiji4.ccs.neu.edu/~zerg/lemurcgi/lemur.cgi?g=p&d=" + database + "&v=" + Word;
             //Sample link: http://fiji4.ccs.neu.edu/~zerg/lemurcgi/lemur.cgi?d=0&v=will
             Document doc = Jsoup.connect(url).maxBodySize(2 * 2048000).get();
             doc.select("hr").remove();
@@ -99,7 +106,6 @@ public class Query {
             //System.out.println("The word: '" + Word + "'");
             //System.out.println(doc.getElementsByTag("body").text());
             //</editor-fold>
-
             //Get ctf
             temp.ctf = Integer.parseInt(data[0]);
             //Get df
@@ -129,11 +135,11 @@ public class Query {
 
             for (int j = 0; j < allWords.get(i).CollectionIds.size(); j++) {
                 CollectionDoc temp = allWords.get(i).CollectionIds.get(j);
-                //<editor-fold defaultstate="collapsed" desc="tf">
+                //<editor-fold defaultstate="collapsed" desc="collection tf">
                 allWords.get(i).CollectionIds.get(j).tf
                         = ((double) temp.frequency / (temp.frequency + 0.5 + 1.5 + (temp.doclenght / docAveLength)));
                 //</editor-fold>
-                //<editor-fold defaultstate="collapsed" desc="tf idf">
+                //<editor-fold defaultstate="collapsed" desc="collection tf idf">
                 allWords.get(i).CollectionIds.get(j).tf_idf
                         = temp.tf * wordIDF;
                 //</editor-fold>
@@ -145,49 +151,53 @@ public class Query {
                 double term3 = ((100 + 1) * temp.tf) / (100 + temp.tf);
                 allWords.get(i).CollectionIds.get(j).b25 += Math.log(term1 * term2 * term3);
                 //</editor-fold>
+                //<editor-fold defaultstate="collapsed" desc="calc weight">
+                allWords.get(i).CollectionIds.get(j).WeightTF = allWords.get(i).CollectionIds.get(j).tf * allWords.get(i).wordTF;
+                allWords.get(i).CollectionIds.get(j).WeightTF_IDF = allWords.get(i).CollectionIds.get(j).tf_idf * allWords.get(i).wordTF;// * allWords.get(i).CollectionIds.get(j).tf_idf;
+                //</editor-fold>
             }
         }
     }
 
-    /*private void FindTF() {
-     for (int i = 0; i < allWords.size(); i++) {
-     allWords.get(i).frequency = (double) allWords.get(i).wordFrequency / maxFrequency;
-     }
+    //<editor-fold defaultstate="collapsed" desc="Maybe later TF">
+    private void FindTF() {
+        for (int i = 0; i < allWords.size(); i++) {
+            allWords.get(i).wordTF = (double) allWords.get(i).wordFrequency / maxFrequency;
+        }
 
-     }*/
-    /*
-     private void FindFrequency() {
-    
-     for (int i = 0; i < allWords.size(); i++) {
-     int counter = 0;
-     //Compare with all the words of the query
-     for (int j = 0; j < allWords.size(); j++) {
-     if (allWords.get(i).Compare(allWords.get(j)) == true) {
-     counter++;
-     allWords.get(i).wordFrequency = counter;
-     //Remove word if it is encountered more than one time
-     if (counter > 1) {
-     allWords.remove(j);
-     }
-     }
-     }
-     }
-     }*/
+    }
 
-    /*//Finds the term with the biggest frequency
-     private void FindMaxFrequency() {
-     double max = 0;
-     for (int i = 0; i < allWords.size(); i++) {
-     if (allWords.get(i).wordFrequency > max) {
-     max = allWords.get(i).wordFrequency;
-     }
-     }
-     maxFrequency = max;
-     }*/
-    public Query(String Description, int id, int database) {
+    private void FindFrequency() {
+
+        for (int i = 0; i < allWords.size(); i++) {
+            int counter = 0;
+            //Compare with all the words of the query
+            for (int j = 0; j < allWords.size(); j++) {
+                if (allWords.get(i).Compare(allWords.get(j)) == true) {
+                    counter++;
+                    allWords.get(i).wordFrequency = counter;
+                }
+            }
+        }
+    }
+
+    //Finds the term with the biggest wordTF
+    private void FindMaxFrequency() {
+        double max = 0;
+        for (int i = 0; i < allWords.size(); i++) {
+            if (allWords.get(i).wordFrequency > max) {
+                max = allWords.get(i).wordFrequency;
+            }
+        }
+        maxFrequency = max;
+    }
+
+    //</editor-fold>
+    public Query(String Description, int id, int database, String type) {
         this.Description = SanitizeText(Description);
         this.QueryID = id;
         this.database = database;
+        this.type = type;
         InitializeAllWords();
         InitDatabaseValues();
     }
@@ -205,9 +215,8 @@ public class Query {
     }
 
     public void StoreProcessedQuery() {
-
         try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(QUERY_DESC_PATH, true)))) {
-            out.println(QueryID + "," + Database + "," + Description);
+            out.println(QueryID + "," + database + "," + Description);
         } catch (IOException ex) {
             Logger.getLogger(RetrievalModels.class.getName()).log(Level.SEVERE, null, ex);
         }

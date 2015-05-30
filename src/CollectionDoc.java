@@ -1,3 +1,6 @@
+
+import java.io.Serializable;
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -7,7 +10,7 @@
  *
  * @author Konstantinos Chasiotis
  */
-public class CollectionDoc {
+public class CollectionDoc implements Serializable {
 
     int id;
     int doclenght;
@@ -15,6 +18,8 @@ public class CollectionDoc {
     double tf;
     double tf_idf;
     double b25;
+    double WeightTF;
+    double WeightTF_IDF;
 
     public CollectionDoc(int id, int doclenght, int f) {
         this.id = id;
